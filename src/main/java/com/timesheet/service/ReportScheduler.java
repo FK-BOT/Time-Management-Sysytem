@@ -5,8 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.DayOfWeek; // Keep if you use this elsewhere, but not needed for monthly
+import java.time.LocalDate;// Keep if you use this elsewhere, but not needed for monthly
 import java.util.List;
 
 @Service

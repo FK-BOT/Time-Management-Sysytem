@@ -3,7 +3,6 @@ package com.timesheet.service;
 import com.timesheet.entity.TimeSheet;
 import com.timesheet.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value; // Import @Value
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -20,72 +19,66 @@ import java.util.List;
 
 @Service
 public class EmailService {
-
+    
+    
     @Autowired
     private JavaMailSender mailSender;
-
+    
     @Autowired
     private UserService userService;
-
-    // --- ADD THIS LINE ---
-    @Value("${spring.mail.username}") // Injects the value of spring.mail.username from application.properties
-    private String senderEmail;
-    // --- END OF ADDITION ---
-
+    
+    
     public void sendMonthlyReport(List<TimeSheet> timeSheets, LocalDate month) {
-        System.out.println("DEBUG: sendMonthlyReport called for month: " + month);
+        System.out.println("DEBUG: sendEmailWithAttachment called ");
         List<User> managers = userService.findAllManagers();
-
+        
         if (managers.isEmpty()) {
-            System.out.println("DEBUG: No managers found. Skipping email sending.");
             return;
         }
-
+        
+        
         try {
             String csvContent = generateCSVReport(timeSheets);
             String subject = "Monthly Timesheet Report - " + month.format(DateTimeFormatter.ofPattern("MMMM yyyy"));
-            String body = "Dear Manager,<br><br>Please find attached the monthly timesheet report for " + month.format(DateTimeFormatter.ofPattern("MMMM yyyy")) + ".<br><br>Regards,<br>Timesheet Application";
-
+            String body = "Please find attached the monthly timesheet report for " + month.format(DateTimeFormatter.ofPattern("MMMM yyyy"));
+            
             for (User manager : managers) {
-                System.out.println("DEBUG: Attempting to send email to: " + manager.getEmail() + " with subject: " + subject);
-                sendEmailWithAttachment(manager.getEmail(), subject, body, csvContent,
-                        "timesheet_report_" + month.format(DateTimeFormatter.ofPattern("yyyy_MM")) + ".csv");
-                System.out.println("DEBUG: Email sent to " + manager.getEmail());
+                sendEmailWithAttachment(manager.getEmail(), subject, body, csvContent, 
+                    "timesheet_report_" + month.format(DateTimeFormatter.ofPattern("yyyy_MM")) + ".csv");
+                System.out.println("email sent");
             }
         } catch (Exception e) {
-            System.err.println("ERROR: Failed to send monthly report: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Failed to send monthly report", e);
         }
     }
-
+    
     private String generateCSVReport(List<TimeSheet> timeSheets) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter writer = new PrintWriter(baos);
-
+        
         // CSV Header
         writer.println("User ID,User Name,Date,Day,Login Time,Logout Time,Work Type,Leave,Remark,Submitted to Admin");
-
+        
         // CSV Data
         for (TimeSheet timeSheet : timeSheets) {
             writer.printf("%d,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
-                    timeSheet.getUser().getId(),
-                    escapeCsvField(timeSheet.getUser().getFullName()),
-                    timeSheet.getDate(),
-                    timeSheet.getDay(),
-                    timeSheet.getLoginTime() != null ? timeSheet.getLoginTime() : "",
-                    timeSheet.getLogoutTime() != null ? timeSheet.getLogoutTime() : "",
-                    timeSheet.getWorkType() != null ? timeSheet.getWorkType().name() : "",
-                    timeSheet.isLeave(),
-                    escapeCsvField(timeSheet.getRemark() != null ? timeSheet.getRemark() : ""),
-                    timeSheet.isSubmittedToAdmin()
+                timeSheet.getUser().getId(),
+                escapeCsvField(timeSheet.getUser().getFullName()),
+                timeSheet.getDate(),
+                timeSheet.getDay(),
+                timeSheet.getLoginTime() != null ? timeSheet.getLoginTime() : "",
+                timeSheet.getLogoutTime() != null ? timeSheet.getLogoutTime() : "",
+                timeSheet.getWorkType() != null ? timeSheet.getWorkType() : "",
+                timeSheet.isLeave(),
+                escapeCsvField(timeSheet.getRemark() != null ? timeSheet.getRemark() : ""),
+                timeSheet.isSubmittedToAdmin()
             );
         }
-
+        
         writer.close();
         return baos.toString();
     }
-
+    
     private String escapeCsvField(String field) {
         if (field == null) {
             return "";
@@ -95,25 +88,22 @@ public class EmailService {
         }
         return field;
     }
-
-    private void sendEmailWithAttachment(String to, String subject, String body, String csvContent, String filename)
+    
+    private void sendEmailWithAttachment(String to, String subject, String body, String csvContent, String filename) 
             throws MessagingException, IOException {
-
+        
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-        // --- THIS IS THE CORRECTED LINE ---
-        helper.setFrom(senderEmail);
-        // Now 'senderEmail' holds the value from 'spring.mail.username'
-        // --- END OF CORRECTED LINE ---
-
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText(body, true);
-
+        helper.setText(body);
+        
         ByteArrayResource resource = new ByteArrayResource(csvContent.getBytes());
         helper.addAttachment(filename, resource);
-
+        
         mailSender.send(message);
     }
-}
+    
+    
+} 

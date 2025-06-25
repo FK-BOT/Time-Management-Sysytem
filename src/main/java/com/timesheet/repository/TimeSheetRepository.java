@@ -22,6 +22,8 @@ public interface TimeSheetRepository extends JpaRepository<TimeSheet, Long> {
     
     List<TimeSheet> findBySubmittedToAdmin(boolean submittedToAdmin);
     
+    List<TimeSheet> findBySubmittedToAdminAndUserId(boolean submittedToAdmin, Long userId);
+    
     @Query("SELECT t FROM TimeSheet t WHERE t.date BETWEEN :startDate AND :endDate")
     List<TimeSheet> findAllByDateRange(@Param("startDate") LocalDate startDate, 
                                       @Param("endDate") LocalDate endDate);

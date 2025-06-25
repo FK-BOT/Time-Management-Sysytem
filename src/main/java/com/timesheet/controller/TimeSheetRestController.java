@@ -3,7 +3,6 @@ package com.timesheet.controller;
 import com.timesheet.entity.TimeSheet;
 import com.timesheet.entity.User;
 import com.timesheet.service.TimeSheetService;
-import com.timesheet.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -102,6 +101,18 @@ public class TimeSheetRestController {
         User user = (User) authentication.getPrincipal();
         if (user.getRole() == User.Role.MANAGER) {
             return ResponseEntity.ok(timeSheetService.getSubmittedTimeSheets());
+        } else {
+            return ResponseEntity.status(403).build();
+        }
+    }
+
+    @GetMapping("/submitted/search")
+    public ResponseEntity<List<TimeSheet>> searchSubmittedTimeSheetsByEmployeeId(
+            @RequestParam Long employeeId, 
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        if (user.getRole() == User.Role.MANAGER) {
+            return ResponseEntity.ok(timeSheetService.getSubmittedTimeSheetsByEmployeeId(employeeId));
         } else {
             return ResponseEntity.status(403).build();
         }

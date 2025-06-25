@@ -92,6 +92,10 @@ public class TimeSheetService {
         return timeSheetRepository.findBySubmittedToAdmin(true);
     }
     
+    public List<TimeSheet> getSubmittedTimeSheetsByEmployeeId(Long employeeId) {
+        return timeSheetRepository.findBySubmittedToAdminAndUserId(true, employeeId);
+    }
+    
     public Optional<TimeSheet> findById(Long id) {
         return timeSheetRepository.findById(id);
     }
